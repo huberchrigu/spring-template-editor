@@ -1,0 +1,71 @@
+@import org.jsoup.nodes.Document
+@import org.springframework.core.io.Resource
+@import org.springframework.security.web.csrf.CsrfToken
+
+@param htmlDocument: Document
+@param cssResource: Resource
+@param csrfToken: CsrfToken
+@param cssPath: String
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Spring Template Editor</title>
+    <link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://unpkg.com/grapesjs"></script>
+    <script src="https://unpkg.com/cssbeautify/cssbeautify.js"></script>
+</head>
+<body>
+<div id="gjs">
+    $unsafe{htmlDocument.html()}
+</div>
+
+<script type="text/javascript">
+    const editor = grapesjs.init({
+        container: '#gjs',
+        fromElement: true,
+        storageManager: false
+    });
+
+    editor.Panels.addButton('options', {
+        id: 'save-db',
+        className: 'fa fa-floppy-o',
+        command: 'save-db',
+        attributes: {title: 'Save'}
+    });
+
+    editor.setStyle('${cssResource.getContentAsString(Charsets.UTF_8)}');
+
+    editor.Commands.add('save-db', {
+        run: function (editor, sender) {
+            if (sender && typeof sender.set === 'function') {
+                sender.set('active', false);
+            }
+            const newCss = cssbeautify(editor.getCss(), {
+                indent: '  ',
+                autosemicolon: true
+            });
+
+            console.log("Saving new CSS...");
+
+            fetch('/save-styles', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', '${csrfToken.headerName}': '${csrfToken.token}'},
+                body: JSON.stringify({
+                    path: '${cssPath}',
+                    content: newCss
+                })
+            })
+                .then(response => response.json())
+                .then(data => alert('Success: ' + data.message))
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error saving styles.');
+                });
+        }
+    });
+</script>
+</body>
+</html>
