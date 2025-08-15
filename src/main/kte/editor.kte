@@ -1,11 +1,11 @@
 @import org.jsoup.nodes.Document
 @import org.springframework.core.io.Resource
-@import org.springframework.security.web.csrf.CsrfToken
+@import tech.chrigu.spring.templateeditor.web.csrf.CsrfHeader
 
 @param htmlDocument: Document
-@param cssResource: Resource
-@param csrfToken: CsrfToken
-@param cssPath: String
+@param cssResource: Resource?
+@param csrfHeader: CsrfHeader?
+@param cssPath: String?
 
 <!doctype html>
 <html lang="en">
@@ -35,9 +35,9 @@
         command: 'save-db',
         attributes: {title: 'Save'}
     });
+    ${cssResource?.getContentAsString(Charsets.UTF_8)?.let{"editor.setStyle('$it');"}}
 
-    editor.setStyle('${cssResource.getContentAsString(Charsets.UTF_8)}');
-
+    ${cssPath?.let{"""
     editor.Commands.add('save-db', {
         run: function (editor, sender) {
             if (sender && typeof sender.set === 'function') {
@@ -49,12 +49,15 @@
             });
 
             console.log("Saving new CSS...");
-
+            const headers = {
+                'Content-Type': 'application/json',
+                ...${csrfHeader?.jsonObject ?: "{}"}
+            };
             fetch('/save-styles', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json', '${csrfToken.headerName}': '${csrfToken.token}'},
+                headers,
                 body: JSON.stringify({
-                    path: '${cssPath}',
+                    path: '$cssPath',
                     content: newCss
                 })
             })
@@ -66,6 +69,7 @@
                 });
         }
     });
+    """}}
 </script>
 </body>
 </html>
