@@ -26,7 +26,7 @@ class TemplateEditorConfiguration(private val resourceLoader: ResourceLoader, pr
 
     @Bean
     internal fun editStylingFilter(csrfTokenProvider: CsrfTokenProvider): TemplateEditorFilter {
-        logger.info("Configure spring-template-editor... You can pass the editor query parameter to enable the editor. ${this::class.java.classLoader}")
+        logger.info("Configure spring-template-editor... You can pass the editor query parameter to enable the editor.")
         return TemplateEditorFilter(resourceLoader, csrfTokenProvider, templateEditorProperties)
     }
 
