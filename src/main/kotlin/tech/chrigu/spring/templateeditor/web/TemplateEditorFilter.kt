@@ -7,14 +7,14 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.springframework.core.io.Resource
 import org.springframework.core.io.ResourceLoader
-import org.springframework.security.web.csrf.CsrfToken
 import org.springframework.web.filter.OncePerRequestFilter
 import org.springframework.web.util.ContentCachingResponseWrapper
+import tech.chrigu.spring.templateeditor.web.csrf.CsrfTokenProvider
 import java.nio.charset.StandardCharsets
 
 // TODO: Move to own library
-internal class TemplateEditorFilter(private val resourceLoader: ResourceLoader) : OncePerRequestFilter() {
-    private val html = Html()
+internal class TemplateEditorFilter(private val resourceLoader: ResourceLoader, csrfTokenProvider: CsrfTokenProvider) : OncePerRequestFilter() {
+    private val html = Html(csrfTokenProvider)
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
         return !request.parameterMap.containsKey("edit")
@@ -26,7 +26,7 @@ internal class TemplateEditorFilter(private val resourceLoader: ResourceLoader) 
         if (responseWrapper.contentType.contains("text/html")) {
             val document = getDocument(responseWrapper)
             val (href, resource) = getLocalCss(document)
-            html.render(document, resource, href, request.getAttribute(CsrfToken::class.java.name) as CsrfToken, response.writer)
+            html.render(document, resource, href, request, response.writer)
         } else {
             responseWrapper.copyBodyToResponse()
         }

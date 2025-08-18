@@ -1,11 +1,11 @@
 @import org.jsoup.nodes.Document
 @import org.springframework.core.io.Resource
-@import org.springframework.security.web.csrf.CsrfToken
+@import tech.chrigu.spring.templateeditor.web.csrf.CsrfHeader
 
 @param htmlDocument: Document
-@param cssResource: Resource
-@param csrfToken: CsrfToken
-@param cssPath: String
+@param cssResource: Resource?
+@param csrfHeader: CsrfHeader?
+@param cssPath: String?
 
 <!doctype html>
 <html lang="en">
@@ -29,14 +29,17 @@
         storageManager: false
     });
 
+    @if (cssResource != null)
+    editor.setStyle('${cssResource.getContentAsString(Charsets.UTF_8)}');
+    @endif
+
+    @if (cssPath != null)
     editor.Panels.addButton('options', {
         id: 'save-db',
         className: 'fa fa-floppy-o',
         command: 'save-db',
         attributes: {title: 'Save'}
     });
-
-    editor.setStyle('${cssResource.getContentAsString(Charsets.UTF_8)}');
 
     editor.Commands.add('save-db', {
         run: function (editor, sender) {
@@ -49,10 +52,13 @@
             });
 
             console.log("Saving new CSS...");
-
+            const headers = {
+                'Content-Type': 'application/json',
+                ...$unsafe{csrfHeader?.jsonObject ?: "{}"}
+            };
             fetch('/save-styles', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json', '${csrfToken.headerName}': '${csrfToken.token}'},
+                headers,
                 body: JSON.stringify({
                     path: '${cssPath}',
                     content: newCss
@@ -66,6 +72,7 @@
                 });
         }
     });
+    @endif
 </script>
 </body>
 </html>

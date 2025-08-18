@@ -32,7 +32,7 @@ internal object CssService {
         val resultSheet = CascadingStyleSheet()
         originalRules.forEach { resultSheet.addRule(it) }
 
-        val writerSettings = CSSWriterSettings(ECSSVersion.CSS30, true)
+        val writerSettings = CSSWriterSettings(ECSSVersion.CSS30, false)
         val writer = CSSWriter(writerSettings)
         writer.setWriteHeaderText(false)
         return writer.getCSSAsString(resultSheet)
