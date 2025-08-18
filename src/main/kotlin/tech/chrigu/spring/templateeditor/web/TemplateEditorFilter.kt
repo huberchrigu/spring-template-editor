@@ -12,8 +12,11 @@ import org.springframework.web.util.ContentCachingResponseWrapper
 import tech.chrigu.spring.templateeditor.web.csrf.CsrfTokenProvider
 import java.nio.charset.StandardCharsets
 
-// TODO: Move to own library
-internal class TemplateEditorFilter(private val resourceLoader: ResourceLoader, csrfTokenProvider: CsrfTokenProvider) : OncePerRequestFilter() {
+internal class TemplateEditorFilter(
+    private val resourceLoader: ResourceLoader,
+    csrfTokenProvider: CsrfTokenProvider,
+    private val templateEditorProperties: TemplateEditorProperties
+) : OncePerRequestFilter() {
     private val html = Html(csrfTokenProvider)
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
@@ -34,7 +37,7 @@ internal class TemplateEditorFilter(private val resourceLoader: ResourceLoader, 
 
     private fun getLocalCss(document: Document): Pair<String?, Resource?> {
         val cssLink = document.select("link[rel=stylesheet]")
-            .firstOrNull { it.attr("href").startsWith("/css") } // TODO: Make configurable
+            .firstOrNull { it.attr("href").startsWith(templateEditorProperties.localCssPrefix) }
             ?: return null to null
         val href = cssLink.attr("href")
         val resource = resourceLoader.getResource("classpath:static$href")

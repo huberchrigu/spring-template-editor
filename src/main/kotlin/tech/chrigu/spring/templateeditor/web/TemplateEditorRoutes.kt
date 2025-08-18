@@ -4,14 +4,10 @@ import org.springframework.web.servlet.function.ServerResponse
 import tech.chrigu.spring.templateeditor.css.CssService
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.nio.file.Paths
 import kotlin.io.path.isRegularFile
 
-internal class TemplateEditorRoutes() {
-    private val staticPath =  // TODO: Error handling, make configurable
-        Paths.get(javaClass.getResource("/static").toURI())
-            .resolve("../../../../src/main/resources/static")
-            .normalize()
+internal class TemplateEditorRoutes(templateEditorProperties: TemplateEditorProperties) {
+    private val staticPath = templateEditorProperties.staticPath
 
     fun saveStyles(request: SaveCssRequest): ServerResponse {
         if (request.path.isBlank()) {
